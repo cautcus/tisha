@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f8cdd7 0%, #f3a4c7 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    .game-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      max-width: 600px;
+      width: 100%;
+      padding: 1rem;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .card {
+      width: 100%;
+      padding-top: 100%; /* Aspect ratio 1:1 */
+      position: relative;
+      cursor: pointer;
+      border-radius: 1rem;
+      background-color: #f4b8c7;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .card-inner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: white;
+      backface-visibility: hidden;
+      transition: transform 0.5s;
+    }
+    .card-back {
+      background: #f4b8c7;
+    }
+    .card-front {
+      transform: rotateY(180deg);
+      background: #ffebf0;
+      color: #f4b8c7;
+    }
+    .card.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container" id="game-container">
+    <!-- Cards will be generated here -->
+  </div>
+
+  <script>
+    const cardsArray = [
+      { id: 1, content: '🎉' },
+      { id: 2, content: '🎂' },
+      { id: 3, content: '🎁' },
+      { id: 4, content: '🎈' },
+      { id: 5, content: '🍰' },
+      { id: 6, content: '🍭' },
+      { id: 7, content: '🍬' },
+      { id: 8, content: '🎀' }
+    ];
+    const gameContainer = document.getElementById('game-container');
+    let firstCard, secondCard;
+    let lockBoard = false;
+
+    function shuffle(array) {
+      array.sort(() => Math.random() - 0.5);
+    }
+
+    function createCardElement(card) {
+      const cardElement = document.createElement('div');
+      cardElement.classList.add('card');
+      cardElement.dataset.id = card.id;
+
+      cardElement.innerHTML = `
+        <div class="card-inner">
+          <div class="card-back card-inner">${card.content}</div>
+          <div class="card-front card-inner"></div>
+        </div>
+      `;
+
+      cardElement.addEventListener('click', flipCard);
+      return cardElement;
+    }
+
+    function flipCard() {
+      if (lockBoard) return;
+      if (this === firstCard) return;
+
+      this.classList.add('flipped');
+
+      if (!firstCard) {
+        firstCard = this;
+        return;
+      }
+
+      secondCard = this;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      let isMatch = firstCard.dataset.id === secondCard.dataset.id;
+
+      isMatch ? disableCards() : unflipCards();
+    }
+
+    function disableCards() {
+      firstCard.removeEventListener('click', flipCard);
+      secondCard.removeEventListener('click', flipCard);
+
+      resetBoard();
+
+      // Check if all cards are matched
+      if (document.querySelectorAll('.card:not(.flipped)').length === 0) {
+        setTimeout(() => {
+          alert('Congratulations! You completed the game.');
+          window.location.href = 'birthday-card.html'; // Redirect to the birthday card page
+        }, 1000);
+      }
+    }
+
+    function unflipCards() {
+      lockBoard = true;
+
+      setTimeout(() => {
+        firstCard.classList.remove('flipped');
+        secondCard.classList.remove('flipped');
+
+        resetBoard();
+      }, 1500);
+    }
+
+    function resetBoard() {
+      [firstCard, secondCard, lockBoard] = [null, null, false];
+    }
+
+    function initializeGame() {
+      const doubledCards = [...cardsArray, ...cardsArray];
+      shuffle(doubledCards);
+
+      doubledCards.forEach(card => {
+        const cardElement = createCardElement(card);
+        gameContainer.appendChild(cardElement);
+      });
+    }
+
+    initializeGame();
+  </script>
+</body>
+</html>
